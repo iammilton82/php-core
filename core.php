@@ -1,5 +1,423 @@
 <?
 
+
+/************ Check the length of a string ****************/
+// $item			= name of the string you want to check
+// $length			= length of the string you want to check
+
+function checkLength($item, $length){
+	if(strlen($item)<=$length){
+		return false;
+	} else {
+		return true;
+	}
+}
+
+
+/************ Clean unformatted text ****************/
+// creates new lines, decodes entities and strips c-slashes from database content
+
+function cleanUp($data){
+	$content = nl2br($data);
+	$content = html_entity_decode($content);
+	$content = stripcslashes($content);
+	return $content;
+}
+
+/************ Create an array from database query results ****************/
+// $value 			= the array value (should coincide with a database column)
+// $label 			= the array label (should coincide with a database column)
+// $table 			= the database table
+// $condition 		= the query conditional, typically the where statement
+// sample:			createArray('user_id', 'username', 'users', "user_type = 'admin'");
+// returns:			array("1"=>"test_user", "2"=>"test_admin2");
+
+function createArray($value, $label, $table, $condition){
+	
+	$a	= array();
+	$b	= array();
+	
+	$query 	= "select $value, $label from $table";
+	
+	if(!empty($condition)){
+		$query .= " where $condition";
+	}
+	
+	// $query .= " order by $label asc";
+	// echo $query;
+	
+	$result = mysql_query($query);
+	$number = @mysql_num_rows($result);
+	
+	if($number > 0){
+		while($d = mysql_fetch_assoc($result)){
+		
+			$value_index = stripcslashes($d["$value"]);
+			$label_index = stripcslashes($d["$label"]);
+			
+			$a[] .= $value_index;
+			$b[] .= $label_index;
+		}
+		
+	}
+	
+	$c = array_combine($a, $b);	
+			
+	return $c;
+}
+
+
+/************** FORM FIELD GENERATORS using Twitter Bootstrap **************/
+
+function formButton($field_id, $label, $class = 'btn'){
+	$html = null;
+	$html .= "<div class='control-group'>";
+	$html .= "<button type='submit' name='$field_id' class='$class'>$label</button>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+
+function formCheckBoxes($field_id, $label, $array, $value, $error, $error_message, $span = 'span3'){
+	if($error == true):
+		$html  = "<div class='control-group error'>";
+	else:
+		$html  = "<div class='control-group'>";
+	endif;
+
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	
+    if(is_array($array)){
+	    foreach($array as $k => $v){
+	    	
+			$string .= "<label class='checkbox'>";
+			$string .= "<input type='checkbox' name='".$field_id."[]' value='$k'>";
+			$string .= $v;
+			$string .= "</label>";
+	    		
+	    }
+	}
+
+	$html .= $string;	
+
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+function formDropDown($field_id, $label, $array, $value, $error, $error_message, $span = 'span3'){
+
+	if($error == true):
+		$html  = "<div class='control-group error'>";
+	else:
+		$html  = "<div class='control-group'>";
+	endif;
+
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	$html .= "<select class='$span' name='$field_id' id='$field_id'>";
+
+	if(!empty($value)){
+		$current = $value;
+	} else {
+		$current = '';
+	}
+    $string = '';
+    if(is_array($array)){
+	    foreach($array as $k => $v){
+	    	if($current == $k){
+	       	 $string .= '<option selected="selected" value="'.$k.'"'.$s.'>'.$v.'</option>'."\n";
+	       	 } else {
+	       	 $string .= '<option value="'.$k.'"'.$s.'>'.$v.'</option>'."\n";
+	       	 }
+	    }
+    } else {
+    	$string .= $array;
+    }
+	$html .= $string;	
+
+	$html .= "</select>";
+		
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+function formFileUpload($field_id, $label, $error, $error_message){
+	$html = null;
+	
+	if($error == true):
+		$html  = "<div class='control-group error'>";
+	else:
+		$html  = "<div class='control-group'>";
+	endif;
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	$html .= "<input type='file' class='input-xlarge' name='$field_id' id='$field_id' />";
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+
+function formPassword($field_id, $label, $value,  $error, $error_message){
+	$html = null;
+
+	if($error == true):
+		$html  = "<div class='control-group error'>";
+	else:
+		$html  = "<div class='control-group'>";
+	endif;
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	$html .= "<input type='password' class='input-xlarge' name='$field_id' id='$field_id' value='$value' />";
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+function formTextArea($field_id = 'description', $label, $value, $error, $error_message){
+	if($error == true):
+		$html  = "<div class='control-group error'>";
+	else:
+		$html  = "<div class='control-group'>";
+	endif;
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	$html .= "<textarea name='$field_id' class='input-xlarge' id='textarea' rows='3'>$value</textarea>";
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+function formTextBox($field_id, $label, $value, $error, $error_message){
+	$html = null;
+	
+	if($error == true):
+		$html  = "<div class='control-group error'>";
+	else:
+		$html  = "<div class='control-group'>";
+	endif;
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	$html .= "<input type='text' class='input-xlarge' name='$field_id' id='$field_id' value='$value' />";
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
+
+
+/************ Returns date in Month Day, Year format ****************/
+function newDate($date){
+	$new = date('M d, Y', $date);
+	return $new;
+}
+
+
+
+/************ Returns date in Month Day, Year and time format ****************/
+function newDateTime($date){
+	$new = date('M d, Y, g:i A', $date);
+	return $new;
+}
+
+
+/************ MySQL Delete Query ****************/
+//$conditions			= array containing the conditions you typically place in a mysql statement
+// sample conditions:	$conditions = array("id"=>$id);
+// $table				= the database table this data should be updated
+
+function queryDelete($conditions, $table) { 
+
+	if (!is_array($conditions)) { die("Delete failed"); } 
+	$sql = "DELETE FROM $table"; 
+	$sql .= " WHERE ";
+	foreach($conditions as $c => $d){
+    	$sql .= "$c = '$d' AND ";
+    }
+	$sql = substr($sql, '0', -4);
+	
+	// echo "<br />".$sql;
+	
+	$run = mysql_query($sql); 
+	if($run){
+		return true;
+	} else {
+		return false;
+	}
+} 
+
+/************ MySQL Insert Query ****************/
+// $info			= array containing the database column and value to be inserted
+// sample array:	$info = array("column"=>$value, "column2"=>$value2);
+// $table			= the database table this data should be inserted
+
+function queryInsert($info, $table) { 
+
+	if (!is_array($info)) { die("Insert failed"); } 
+	$sql = "INSERT INTO ".$table." ("; 
+	for ($i=0; $i<count($info); $i++) { 
+		$sql .= key($info); 
+		if ($i < (count($info)-1)) { 
+			$sql .= ", "; 
+		} else {
+			$sql .= ") "; 
+		}
+		next($info); 
+	} 
+	
+	reset($info); 
+	$sql .= "VALUES ("; 
+	for ($j=0; $j<count($info); $j++) { 
+		$sql .= "'".current($info)."'"; 
+		if ($j < (count($info)-1)) { 
+		   $sql .= ", "; 
+		} else { 
+			$sql .= ") "; 
+		}
+		next($info); 
+	} 
+	
+	// echo $sql;	
+	
+	$run = mysql_query($sql); 
+	if($run){
+		return true;
+	} else {
+		return false;
+	}
+} 
+
+/************ MySQL Update Query ****************/
+// $array				= array containing the database column and value to be inserted
+// sample array:		$info = array("column"=>$value, "column2"=>$value2);
+//$conditions			= array containing the conditions you typically place in a mysql statement
+// sample conditions:	$conditions = array("id"=>$id);
+// $table				= the database table this data should be updated
+
+function queryUpdate($array, $conditions, $table) { 
+
+	if (!is_array($array)) { die("Insert failed"); } 
+	$sql = "UPDATE $table SET "; 
+	foreach($array as $k => $v){
+    	$sql .= "$k = '$v', ";
+    }
+	
+	$sql = substr($sql, '0', -2);
+	$sql .= " WHERE ";
+
+	foreach($conditions as $c => $d){
+    	$sql .= "$c = '$d', ";
+    }
+
+	$sql = substr($sql, '0', -2);
+	
+	// echo "<br />".$sql;
+		
+	$run = mysql_query($sql); 
+	if($run){
+		return true;
+	} else {
+		return false;
+	}
+} 
+
+/************ MySQL Insert Query ****************/
+// $data			= the database column you want to return
+// $table			= the database table this data should be inserted
+// $condition		= the query condition
+// sample:			returnData('column', 'table', "id = '$id'")
+
+function returnData($data, $table, $condition){
+	$q = "select $data from $table where $condition";
+	$result = mysql_query($q);
+	$number = @mysql_num_rows($result);
+	if($number>0){
+		while($x = mysql_fetch_assoc($result)){
+			$name = stripcslashes($x["$data"]);
+			return $name;
+		}
+	}
+}
+
+/************ Cleans content for database input ****************/
+// a quicker way to use mysql_real_escape_string
+
+function sanitize($value){
+	return mysql_real_escape_string($value);
+}
+
+/************ Returns the total sum of a select group of rows ****************/
+function sumNumbers($column, $table, $condition){
+	
+	$sql 	= "select sum($column) from $table where $condition";
+	$result = mysql_query($sql);
+	while ($num = mysql_fetch_assoc($result)):
+		$total = $num['sum(num_hours)'];
+	endwhile;
+	
+	if(empty($total) || $total == 0):
+		$total = 0;
+	endif;
+	
+	return $total;
+}
+
+/************ Returns the total number of rows ****************/
+function totalNumber($table, $condition){
+	$query = "select * from $table where $condition";
+	$result = mysql_query($query);
+	$number = mysql_num_rows($result);
+	
+	return $number;
+}
+
+
+/************ Truncates the length of a string ****************/
+function truncateText($text, $max=100, $append='&hellip;') {
+       if (strlen($text) <= $max) return $text;
+       $out = substr($text,0,$max);
+       if (strpos($text,' ') === FALSE) return $out.$append;
+       return preg_replace('/\w+$/','',$out).$append;
+}
+
+
 /************ UPLOAD SCRIPT ****************/
 // $file_id 	= field name of the file
 // $folder 		= destination folder
@@ -58,365 +476,5 @@ function uploadStuff($file_id, $folder="", $types="") {
 
 
 
-/************ Creates a select box from an array ****************/
-// $array			= array options
-// sample array:	$array = array("name"=>"value", "name2"=>"value2");
-// $preselect		= you can pass in a preselected value
-
-function showSelectOptions($array, $preselect)
-{
-	if(!empty($preselect)){
-		$current = $preselect;
-	} else {
-		$current = '';
-	}
-    $string = '';
-    
-    if(is_array($array)){
-	    foreach($array as $k => $v){
-	    	if($current == $k){
-	       	 $string .= '<option selected="selected" value="'.$k.'"'.$s.'>'.$v.'</option>'."\n";
-	       	 } else {
-	       	 $string .= '<option value="'.$k.'"'.$s.'>'.$v.'</option>'."\n";
-	       	 }
-	    }
-    } else {
-    	$string .= $array;
-    }
-    return $string;
-}
-
-/************ Check the length of a string ****************/
-// $item			= name of the string you want to check
-// $length			= length of the string you want to check
-
-function checkLength($item, $length){
-	if(strlen($item)<=$length){
-		return false;
-	} else {
-		return true;
-	}
-}
-
-
-/************ Return Database Data By ID ****************/
-// $data			= the database columns you want to return
-// $table			= the database table
-// $id				= id of the row
-// sample: 			getDBData('id', 'table_name', 5);
- 
-function getDBData($data, $table, $id){
-	$q = "select $data from $table where id = '$id'";
-	$result = mysql_query($q);
-	if(mysql_num_rows($result)>0){
-		while($x = mysql_fetch_assoc($result)){
-			$name = $x["$data"];
-			return $name;
-		}
-	}
-}
-
-/************ Return Database Data By Conditional ****************/
-// $data			= the database columns you want to return
-// $table			= the database table
-// $condition		= this is typically what you put into the where statement in a mysql statement
-
-// sample: 			getDBData2('id', 'table_name', "name = '$string'");
-function getDBData2($data, $table, $condition){
-	$q = "select $data from $table where $condition";
-	$result = mysql_query($q);
-	$number = @mysql_num_rows($result);
-	if($number>0){
-		while($x = mysql_fetch_assoc($result)){
-			$name = stripcslashes($x["$data"]);
-			return $name;
-		}
-	}
-}
-
-
-
-/************ MySQL Insert Query ****************/
-// $info			= array containing the database column and value to be inserted
-// sample array:	$info = array("column"=>$value, "column2"=>$value2);
-// $table			= the database table this data should be inserted
-
-function insertQuery($info, $table) { 
-
-	if (!is_array($info)) { die("Insert failed"); } 
-	$sql = "INSERT INTO ".$table." ("; 
-	for ($i=0; $i<count($info); $i++) { 
-		$sql .= key($info); 
-		if ($i < (count($info)-1)) { 
-			$sql .= ", "; 
-		} else {
-			$sql .= ") "; 
-		}
-		next($info); 
-	} 
-	
-	reset($info); 
-	$sql .= "VALUES ("; 
-	for ($j=0; $j<count($info); $j++) { 
-		$sql .= "'".current($info)."'"; 
-		if ($j < (count($info)-1)) { 
-		   $sql .= ", "; 
-		} else { 
-			$sql .= ") "; 
-		}
-		next($info); 
-	} 
-	
-	// echo $sql;	
-	
-	$run = mysql_query($sql); 
-	if($run){
-		return true;
-	} else {
-		return false;
-	}
-} 
-
-/************ MySQL Update Query ****************/
-// $array				= array containing the database column and value to be inserted
-// sample array:		$info = array("column"=>$value, "column2"=>$value2);
-//$conditions			= array containing the conditions you typically place in a mysql statement
-// sample conditions:	$conditions = array("id"=>$id);
-// $table				= the database table this data should be updated
-
-function updateQuery($array, $conditions, $table) { 
-
-	if (!is_array($array)) { die("Insert failed"); } 
-	$sql = "UPDATE $table SET "; 
-	foreach($array as $k => $v){
-    	$sql .= "$k = '$v', ";
-    }
-	
-	$sql = substr($sql, '0', -2);
-	$sql .= " WHERE ";
-
-	foreach($conditions as $c => $d){
-    	$sql .= "$c = '$d', ";
-    }
-
-	$sql = substr($sql, '0', -2);
-	
-	// echo "<br />".$sql;
-		
-	$run = mysql_query($sql); 
-	if($run){
-		return true;
-	} else {
-		return false;
-	}
-} 
-
-
-
-/************ MySQL Delete Query ****************/
-//$conditions			= array containing the conditions you typically place in a mysql statement
-// sample conditions:	$conditions = array("id"=>$id);
-// $table				= the database table this data should be updated
-
-function deleteQuery($conditions, $table) { 
-
-	if (!is_array($conditions)) { die("Delete failed"); } 
-	$sql = "DELETE FROM $table"; 
-	$sql .= " WHERE ";
-	foreach($conditions as $c => $d){
-    	$sql .= "$c = '$d' AND ";
-    }
-	$sql = substr($sql, '0', -4);
-	
-	// echo "<br />".$sql;
-	
-	$run = mysql_query($sql); 
-	if($run){
-		return true;
-	} else {
-		return false;
-	}
-} 
-
-/************ Clean unformatted text ****************/
-// creates new lines, decodes entities and strips c-slashes from database content
-
-function cleanUp($data){
-	$content = nl2br($data);
-	$content = html_entity_decode($content);
-	$content = stripcslashes($content);
-	return $content;
-}
-
-
-
-/************ Create an array from database query results ****************/
-// $value 			= the array value (should coincide with a database column)
-// $label 			= the array label (should coincide with a database column)
-// $table 			= the database table
-// $condition 		= the query conditional, typically the where statement
-// sample:			createArray('user_id', 'username', 'users', "user_type = 'admin'");
-// returns:			array("1"=>"test_user", "2"=>"test_admin2");
-
-function createArray($value, $label, $table, $condition){
-	
-	$a	= array();
-	$b	= array();
-	
-	$query 	= "select $value, $label from $table";
-	
-	if(!empty($condition)){
-		$query .= " where $condition";
-	}
-	
-	// $query .= " order by $label asc";
-	// echo $query;
-	
-	$result = mysql_query($query);
-	$number = @mysql_num_rows($result);
-	
-	if($number > 0){
-		while($d = mysql_fetch_assoc($result)){
-		
-			$value_index = stripcslashes($d["$value"]);
-			$label_index = stripcslashes($d["$label"]);
-			
-			$a[] .= $value_index;
-			$b[] .= $label_index;
-		}
-		
-	}
-	
-	$c = array_combine($a, $b);	
-			
-	return $c;
-}
-
-
-/************ BUILD CHECK BOXES FROM ARRAY ************/
-// $name 			= field name (typically sent to $_POST, no spaces or special characters)
-// $array 			= array of options
-// sample array:		$info = array("column"=>$value, "column2"=>$value2);
-// $preselect		= preselect value (optional)
-
-function buildCheckBoxes($name, $array, $preselect){
-	foreach($array as $value => $label):
-		
-		if(in_array($value, $preselect)):
-			$checked = 'checked';
-		else:
-			$checked = 'rel = "notchecked"';
-		endif;		
-		
-		$checkbox .= "<div><input id='$name' type='checkbox' name='".$name."[]' value='$value' $checked> $label</div>";
-	
-	endforeach;
-	
-		return $checkbox;
-	
-}
-
-
-/************ BUILD CHECK BOXES FROM ARRAY ************/
-function buildRadioButtons($name, $array, $preselect){
-	foreach($array as $value => $label):
-		
-		if(in_array($value, $preselect)):
-			$checked = 'checked';
-		else:
-			$checked = 'rel = "notchecked"';
-		endif;		
-		
-		$checkbox .= "<div><input id='$name' type='radio' name='".$name."' value='$value' $checked> $label</div>";
-	
-	endforeach;
-	
-		return $checkbox;
-	
-}
-
-
-
-
-/****************************************** CREATE FORM FIELDS ***************************************/
-// label = public name/description of the field of the field
-// type = the type of form field
-	/* type options: 
-	textarea
-	radio
-	radio2 (multiple radio buttons)
-	file
-	checkbox (single check box)
-	checkbox2 (multiple check boxes)
-	select
-	select2 (with "select one...")
-	readonly
-	hidden
-	textbox (the default)
-	*/
-// name = field name (typically sent to $_POST, no spaces or special characters)
-// default = default text (does not work in select)
-// options = options array for select
-// preselect = preselected item for select
-	
-function createField($label, $type, $name, $default, $options, $preselect){
-
-	if($type != 'hidden'):
-	$field .= "<div class='field $name $type' rel='$name'>";
-	$field .= "<label for='$name'>$label</label>";
-	$field .= "<div class='user-input $name'>";
-	endif;
-	
-	switch ($type) {
-		case "textarea":
-			$field .= "<textarea id='$name' name='$name'>$default</textarea>";
-			break;
-		case "radio":
-			$field .= "<input id='$name' type='$type' name='$name' value='$default'> $default";
-			break;
-		case "file":
-			$field .= "<input id='$name' type='$type' name='$name'  />";
-			break;
-		case "checkbox":
-			$field .= "<input id='$name' type='$type' name='$name' value='$default'> $default";
-			break;
-		case "checkbox2":
-			// name = field name
-			// options = value array
-			// default = preselected values
-			$field .= buildCheckBoxes($name, $options, $default);
-			break;
-		case "radio2":
-			// name = field name
-			// options = value array
-			// default = preselected values
-			$field .= buildRadioButtons($name, $options, $default);
-			break;
-		case "select":
-			$field .= "<select id='$name' name='$name'>";
-			$field .= showOptionsDrop($options, $preselect);
-			$field .= "</select>";
-			break;
-		case "select2":
-			$field .= "<select id='$name' name='$name'>";
-			$field .= "<option value=''>Select one...</option>";
-			$field .= showOptionsDrop($options, $preselect);
-			$field .= "</select>";
-			break;
-		case "readonly":
-			$field .= "<input id='$name' readonly='readonly' type='text' name='$name' value='$default' />";
-			break;
-		default:
-			$field .= "<input id='$name' type='$type' name='$name' value='$default' />";
-			break;
-	}
-	
-	if($type != 'hidden'):
-	$field .= "</div>";
-	$field .= "</div>";
-	endif;
-	
-	return $field;
-}
 
 ?>
