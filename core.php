@@ -18,9 +18,7 @@ function checkLength($item, $length){
 // creates new lines, decodes entities and strips c-slashes from database content
 
 function cleanUp($data){
-	$content = nl2br($data);
-	$content = html_entity_decode($content);
-	$content = stripcslashes($content);
+	$content = stripcslashes($data);
 	return $content;
 }
 
@@ -71,8 +69,8 @@ function createArray($value, $label, $table, $condition){
 
 function formButton($field_id, $label, $class = 'btn'){
 	$html = null;
-	$html .= "<div class='control-group'>";
-	$html .= "<button type='submit' name='$field_id' class='$class'>$label</button>";
+	$html .= "<div id='parent_$field_id' class='control-group'>";
+	$html .= "<input type='submit' name='$field_id' value='$label' class='$class' />";
 	$html .= "</div>";
 	
 	return $html;
@@ -82,9 +80,9 @@ function formButton($field_id, $label, $class = 'btn'){
 
 function formCheckBoxes($field_id, $label, $array, $value, $error, $error_message, $span = 'span3'){
 	if($error == true):
-		$html  = "<div class='control-group error'>";
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
 	else:
-		$html  = "<div class='control-group'>";
+		$html  = "<div id='parent_$field_id' class='control-group'>";
 	endif;
 
 	$html .= "<label class='control-label' for='$field_id'>$label</label>";
@@ -117,9 +115,9 @@ function formCheckBoxes($field_id, $label, $array, $value, $error, $error_messag
 function formDropDown($field_id, $label, $array, $value, $error, $error_message, $span = 'span3'){
 
 	if($error == true):
-		$html  = "<div class='control-group error'>";
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
 	else:
-		$html  = "<div class='control-group'>";
+		$html  = "<div id='parent_$field_id' class='control-group'>";
 	endif;
 
 	$html .= "<label class='control-label' for='$field_id'>$label</label>";
@@ -162,9 +160,9 @@ function formFileUpload($field_id, $label, $error, $error_message){
 	$html = null;
 	
 	if($error == true):
-		$html  = "<div class='control-group error'>";
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
 	else:
-		$html  = "<div class='control-group'>";
+		$html  = "<div id='parent_$field_id' class='control-group'>";
 	endif;
 	$html .= "<label class='control-label' for='$field_id'>$label</label>";
 	$html .= "<div class='controls'>";
@@ -184,9 +182,9 @@ function formPassword($field_id, $label, $value,  $error, $error_message){
 	$html = null;
 
 	if($error == true):
-		$html  = "<div class='control-group error'>";
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
 	else:
-		$html  = "<div class='control-group'>";
+		$html  = "<div id='parent_$field_id' class='control-group'>";
 	endif;
 	$html .= "<label class='control-label' for='$field_id'>$label</label>";
 	$html .= "<div class='controls'>";
@@ -203,9 +201,9 @@ function formPassword($field_id, $label, $value,  $error, $error_message){
 
 function formTextArea($field_id = 'description', $label, $value, $error, $error_message){
 	if($error == true):
-		$html  = "<div class='control-group error'>";
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
 	else:
-		$html  = "<div class='control-group'>";
+		$html  = "<div id='parent_$field_id' class='control-group'>";
 	endif;
 	$html .= "<label class='control-label' for='$field_id'>$label</label>";
 	$html .= "<div class='controls'>";
@@ -225,9 +223,9 @@ function formTextBox($field_id, $label, $value, $error, $error_message){
 	$html = null;
 	
 	if($error == true):
-		$html  = "<div class='control-group error'>";
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
 	else:
-		$html  = "<div class='control-group'>";
+		$html  = "<div id='parent_$field_id' class='control-group'>";
 	endif;
 	$html .= "<label class='control-label' for='$field_id'>$label</label>";
 	$html .= "<div class='controls'>";
@@ -242,6 +240,26 @@ function formTextBox($field_id, $label, $value, $error, $error_message){
 	
 }
 
+function formTextBoxReadOnly($field_id, $label, $value, $error, $error_message){
+	$html = null;
+	
+	if($error == true):
+		$html  = "<div id='parent_$field_id' class='control-group error'>";
+	else:
+		$html  = "<div id='parent_$field_id' class='control-group'>";
+	endif;
+	$html .= "<label class='control-label' for='$field_id'>$label</label>";
+	$html .= "<div class='controls'>";
+	$html .= "<input readonly='readonly' type='text' class='input-xlarge' name='$field_id' id='$field_id' value='$value' />";
+	if($error == true):
+		$html .= "<span class='help-inline'>$error_message</span>";
+	endif;
+	$html .= "</div>";
+	$html .= "</div>";
+	
+	return $html;
+	
+}
 
 /************ Returns date in Month Day, Year format ****************/
 function newDate($date){
@@ -263,7 +281,7 @@ function newDateTime($date){
 // sample conditions:	$conditions = array("id"=>$id);
 // $table				= the database table this data should be updated
 
-function queryDelete($conditions, $table) { 
+function queryDelete($conditions, $table, $process = true) { 
 
 	if (!is_array($conditions)) { die("Delete failed"); } 
 	$sql = "DELETE FROM $table"; 
@@ -272,10 +290,13 @@ function queryDelete($conditions, $table) {
     	$sql .= "$c = '$d' AND ";
     }
 	$sql = substr($sql, '0', -4);
-	
-	// echo "<br />".$sql;
-	
-	$run = mysql_query($sql); 
+
+	if($process == false){
+		echo "<br />".$sql;	
+	} else {
+		$run = mysql_query($sql);
+	}
+
 	if($run){
 		return true;
 	} else {
@@ -288,7 +309,7 @@ function queryDelete($conditions, $table) {
 // sample array:	$info = array("column"=>$value, "column2"=>$value2);
 // $table			= the database table this data should be inserted
 
-function queryInsert($info, $table) { 
+function queryInsert($info, $table, $process = true) { 
 
 	if (!is_array($info)) { die("Insert failed"); } 
 	$sql = "INSERT INTO ".$table." ("; 
@@ -314,9 +335,12 @@ function queryInsert($info, $table) {
 		next($info); 
 	} 
 	
-	// echo $sql;	
-	
-	$run = mysql_query($sql); 
+	if($process == false){
+		echo "<br />".$sql;	
+	} else {
+		$run = mysql_query($sql);
+	}
+
 	if($run){
 		return true;
 	} else {
@@ -331,7 +355,7 @@ function queryInsert($info, $table) {
 // sample conditions:	$conditions = array("id"=>$id);
 // $table				= the database table this data should be updated
 
-function queryUpdate($array, $conditions, $table) { 
+function queryUpdate($array, $conditions, $table, $process = true) { 
 
 	if (!is_array($array)) { die("Insert failed"); } 
 	$sql = "UPDATE $table SET "; 
@@ -348,9 +372,12 @@ function queryUpdate($array, $conditions, $table) {
 
 	$sql = substr($sql, '0', -2);
 	
-	// echo "<br />".$sql;
+	if($process == false){
+		echo "<br />".$sql;	
+	} else {
+		$run = mysql_query($sql);
+	}
 		
-	$run = mysql_query($sql); 
 	if($run){
 		return true;
 	} else {
@@ -408,6 +435,14 @@ function totalNumber($table, $condition){
 	return $number;
 }
 
+function createSlug($string){
+   
+   $slug = preg_replace('/[^A-Za-z0-9-]+/', '-', $string);
+   $slug = $slug."-".time();
+   $slug = strtolower($slug);
+   
+   return $slug;
+}
 
 /************ Truncates the length of a string ****************/
 function truncateText($text, $max=100, $append='&hellip;') {
@@ -471,6 +506,62 @@ function uploadStuff($file_id, $folder="", $types="") {
     }
 
     return array($file_name,$result);
+}
+
+
+
+function sendEmail($template, $to_array, $from_array, $subject, $content, $text_content, $replace_array, $process = true){
+	
+	// $to_array = all emails and names of the recipients
+	// from_array = single array item for from
+	// subject = grab subject
+	// content = content that should be inside the template
+	// $replace_array = all of the variables and text to be replaced
+	// process = false or true, sends the actual email
+	
+	
+	require_once('class.phpmailer.php');
+	$mail             = new PHPMailer(); // defaults to using php "mail()"
+	$mail->IsSendmail(); // telling the class to use SendMail transport
+	$body             = file_get_contents($template);
+	$body             = str_replace("[\]",'',$body);
+	
+	foreach($replace_array as $item=>$text){
+		$content = str_replace($item, $text, $content);
+		$text_content = str_replace($item, $text, $text_content);
+	}
+	$template_replace = array("{TEMPLATE_NAME}"=>$template_name, "{SITE}"=>SITE, "{EMAIL_BODY_HERE}"=>$content);
+	foreach($template_replace as $item=>$text){
+		$body = str_replace($item, $text, $body);
+		$text_content = str_replace($item, $text, $text_content);
+	}
+	
+	foreach($from_array as $email=>$name){
+		$mail->AddReplyTo($email,$name);
+		$mail->SetFrom($email, $name);
+		$mail->AddReplyTo($email, $name);
+	}
+	foreach($to_array as $email=>$name){
+		$mail->AddAddress($email, $name);
+	}
+		
+	$mail->Subject    = $subject;
+	$mail->AltBody    = $text_content;
+	$mail->MsgHTML($body);
+	
+	if($process == true){
+		if(!$mail->Send()) {
+		  return false;
+		} else {
+		  return true;
+		}
+	} else {
+		echo $body;
+		echo "<br />";
+		echo $text_content;
+	}
+	
+
 }
 
 
