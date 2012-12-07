@@ -67,6 +67,44 @@ function createArray($value, $label, $table, $condition){
 
 /************** FORM FIELD GENERATORS using Twitter Bootstrap **************/
 
+
+/* form validation */
+
+function validateZipCode($postalCode, $countryCode){
+    switch ($countryCode){
+    case "US":
+      $countryformat = "/^([0-9]{5})(?:[-\s]*([0-9]{4}))?$/";
+      break;
+    case "CA":
+      $countryformat = "/^([A-Z][0-9][A-Z])\s*([0-9][A-Z][0-9])$/";
+      break;
+    default:
+      $countryformat = "/^(?:[A-Z0-9]+([- ]?[A-Z0-9]+)*)?$/";
+    }
+ 
+    return preg_match('$countryformat', $postalCode);
+}
+
+function validatePhone($phoneNo){
+    return preg_match('/\(?\d{3}\)?[-\s.]?\d{3}
+        [-\s.]\d{4}/x', $phoneNo);
+}
+
+function isValidEmail($email){
+    return preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]
+    +(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/i', $email);
+}
+
+function passwordMatch($password1, $password2){
+    if($password1 != $password2){
+        return false;
+    }else{
+    	return true;
+    }
+}
+
+/* end form validation */
+
 function formButton($field_id, $label, $class = 'btn'){
 	$html = null;
 	$html .= "<div id='parent_$field_id' class='control-group'>";
