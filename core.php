@@ -1,25 +1,19 @@
 <?
 
 
-/************ Check the length of a string ****************/
-// $item			= name of the string you want to check
-// $length			= length of the string you want to check
-
-function checkLength($item, $length){
-	if(strlen($item)<=$length){
-		return false;
-	} else {
-		return true;
-	}
-}
-
-
 /************ Clean unformatted text ****************/
 // creates new lines, decodes entities and strips c-slashes from database content
 
 function cleanUp($data){
 	$content = stripcslashes($data);
 	return $content;
+}
+
+/************ Cleans content for database input ****************/
+// a quicker way to use mysql_real_escape_string
+
+function sanitize($value){
+	return mysql_real_escape_string($value);
 }
 
 /************ Create an array from database query results ****************/
@@ -64,11 +58,151 @@ function createArray($value, $label, $table, $condition){
 	return $c;
 }
 
+/************ MySQL Insert Query ****************/
+// $data			= the database column you want to return
+// $table			= the database table this data should be inserted
+// $condition		= the query condition
+// sample:			returnData('column', 'table', "id = '$id'")
+
+function returnData($data, $table, $condition){
+	$q = "select $data from $table where $condition";
+	$result = mysql_query($q);
+	$number = @mysql_num_rows($result);
+	if($number>0){
+		while($x = mysql_fetch_assoc($result)){
+			$name = stripcslashes($x["$data"]);
+			return $name;
+		}
+	}
+}
+
+/************ MySQL Delete Query ****************/
+//$conditions			= array containing the conditions you typically place in a mysql statement
+// sample conditions:	$conditions = array("id"=>$id);
+// $table				= the database table this data should be updated
+
+function queryDelete($conditions, $table, $process = true) { 
+
+	if (!is_array($conditions)) { die("Delete failed"); } 
+	$sql = "DELETE FROM $table"; 
+	$sql .= " WHERE ";
+	foreach($conditions as $c => $d){
+    	$sql .= "$c = '$d' AND ";
+    }
+	$sql = substr($sql, '0', -4);
+
+	if($process == false){
+		echo "<br />".$sql;	
+	} else {
+		$run = mysql_query($sql);
+	}
+
+	if($run){
+		return true;
+	} else {
+		return false;
+	}
+} 
+
+/************ MySQL Insert Query ****************/
+// $info			= array containing the database column and value to be inserted
+// sample array:	$info = array("column"=>$value, "column2"=>$value2);
+// $table			= the database table this data should be inserted
+
+function queryInsert($info, $table, $process = true) { 
+
+	if (!is_array($info)) { die("Insert failed"); } 
+	$sql = "INSERT INTO ".$table." ("; 
+	for ($i=0; $i<count($info); $i++) { 
+		$sql .= key($info); 
+		if ($i < (count($info)-1)) { 
+			$sql .= ", "; 
+		} else {
+			$sql .= ") "; 
+		}
+		next($info); 
+	} 
+	
+	reset($info); 
+	$sql .= "VALUES ("; 
+	for ($j=0; $j<count($info); $j++) { 
+		$sql .= "'".current($info)."'"; 
+		if ($j < (count($info)-1)) { 
+		   $sql .= ", "; 
+		} else { 
+			$sql .= ") "; 
+		}
+		next($info); 
+	} 
+	
+	if($process == false){
+		echo "<br />".$sql;	
+	} else {
+		$run = mysql_query($sql);
+	}
+
+	if($run){
+		return true;
+	} else {
+		return false;
+	}
+} 
+
+/************ MySQL Update Query ****************/
+// $array				= array containing the database column and value to be inserted
+// sample array:		$info = array("column"=>$value, "column2"=>$value2);
+//$conditions			= array containing the conditions you typically place in a mysql statement
+// sample conditions:	$conditions = array("id"=>$id);
+// $table				= the database table this data should be updated
+
+function queryUpdate($array, $conditions, $table, $process = true) { 
+
+	if (!is_array($array)) { die("Insert failed"); } 
+	$sql = "UPDATE $table SET "; 
+	foreach($array as $k => $v){
+    	$sql .= "$k = '$v', ";
+    }
+	
+	$sql = substr($sql, '0', -2);
+	$sql .= " WHERE ";
+
+	foreach($conditions as $c => $d){
+    	$sql .= "$c = '$d', ";
+    }
+
+	$sql = substr($sql, '0', -2);
+	
+	if($process == false){
+		echo "<br />".$sql;	
+	} else {
+		$run = mysql_query($sql);
+	}
+		
+	if($run){
+		return true;
+	} else {
+		return false;
+	}
+} 
+
+
 
 /************** FORM FIELD GENERATORS using Twitter Bootstrap **************/
 
 
 /* form validation */
+
+/************ Check the length of a string ****************/
+// $item			= name of the string you want to check
+// $length			= length of the string you want to check
+
+function checkLength($item, $length){
+	if(strlen($item)<=$length){
+		return false;
+	} else {
+		return true;
+	}
+}
 
 function validateZipCode($postalCode, $countryCode){
     switch ($countryCode){
@@ -104,6 +238,8 @@ function passwordMatch($password1, $password2){
 }
 
 /* end form validation */
+
+
 
 function formButton($field_id, $label, $class = 'btn'){
 	$html = null;
@@ -314,139 +450,6 @@ function newDateTime($date){
 }
 
 
-/************ MySQL Delete Query ****************/
-//$conditions			= array containing the conditions you typically place in a mysql statement
-// sample conditions:	$conditions = array("id"=>$id);
-// $table				= the database table this data should be updated
-
-function queryDelete($conditions, $table, $process = true) { 
-
-	if (!is_array($conditions)) { die("Delete failed"); } 
-	$sql = "DELETE FROM $table"; 
-	$sql .= " WHERE ";
-	foreach($conditions as $c => $d){
-    	$sql .= "$c = '$d' AND ";
-    }
-	$sql = substr($sql, '0', -4);
-
-	if($process == false){
-		echo "<br />".$sql;	
-	} else {
-		$run = mysql_query($sql);
-	}
-
-	if($run){
-		return true;
-	} else {
-		return false;
-	}
-} 
-
-/************ MySQL Insert Query ****************/
-// $info			= array containing the database column and value to be inserted
-// sample array:	$info = array("column"=>$value, "column2"=>$value2);
-// $table			= the database table this data should be inserted
-
-function queryInsert($info, $table, $process = true) { 
-
-	if (!is_array($info)) { die("Insert failed"); } 
-	$sql = "INSERT INTO ".$table." ("; 
-	for ($i=0; $i<count($info); $i++) { 
-		$sql .= key($info); 
-		if ($i < (count($info)-1)) { 
-			$sql .= ", "; 
-		} else {
-			$sql .= ") "; 
-		}
-		next($info); 
-	} 
-	
-	reset($info); 
-	$sql .= "VALUES ("; 
-	for ($j=0; $j<count($info); $j++) { 
-		$sql .= "'".current($info)."'"; 
-		if ($j < (count($info)-1)) { 
-		   $sql .= ", "; 
-		} else { 
-			$sql .= ") "; 
-		}
-		next($info); 
-	} 
-	
-	if($process == false){
-		echo "<br />".$sql;	
-	} else {
-		$run = mysql_query($sql);
-	}
-
-	if($run){
-		return true;
-	} else {
-		return false;
-	}
-} 
-
-/************ MySQL Update Query ****************/
-// $array				= array containing the database column and value to be inserted
-// sample array:		$info = array("column"=>$value, "column2"=>$value2);
-//$conditions			= array containing the conditions you typically place in a mysql statement
-// sample conditions:	$conditions = array("id"=>$id);
-// $table				= the database table this data should be updated
-
-function queryUpdate($array, $conditions, $table, $process = true) { 
-
-	if (!is_array($array)) { die("Insert failed"); } 
-	$sql = "UPDATE $table SET "; 
-	foreach($array as $k => $v){
-    	$sql .= "$k = '$v', ";
-    }
-	
-	$sql = substr($sql, '0', -2);
-	$sql .= " WHERE ";
-
-	foreach($conditions as $c => $d){
-    	$sql .= "$c = '$d', ";
-    }
-
-	$sql = substr($sql, '0', -2);
-	
-	if($process == false){
-		echo "<br />".$sql;	
-	} else {
-		$run = mysql_query($sql);
-	}
-		
-	if($run){
-		return true;
-	} else {
-		return false;
-	}
-} 
-
-/************ MySQL Insert Query ****************/
-// $data			= the database column you want to return
-// $table			= the database table this data should be inserted
-// $condition		= the query condition
-// sample:			returnData('column', 'table', "id = '$id'")
-
-function returnData($data, $table, $condition){
-	$q = "select $data from $table where $condition";
-	$result = mysql_query($q);
-	$number = @mysql_num_rows($result);
-	if($number>0){
-		while($x = mysql_fetch_assoc($result)){
-			$name = stripcslashes($x["$data"]);
-			return $name;
-		}
-	}
-}
-
-/************ Cleans content for database input ****************/
-// a quicker way to use mysql_real_escape_string
-
-function sanitize($value){
-	return mysql_real_escape_string($value);
-}
 
 /************ Returns the total sum of a select group of rows ****************/
 function sumNumbers($column, $table, $condition){
